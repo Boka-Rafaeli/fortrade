@@ -1,0 +1,287 @@
+---
+alwaysApply: true
+---
+# Cursor Rules — Playwright TS E2E Boilerplate (POM + Allure decorators + GitHub Actions)
+
+You are an expert QA Automation Architect and TypeScript engineer.
+Goal: design and implement an opinionated, scalable Playwright E2E framework with strict layering:
+app → screens → components, with business logic in flows/helpers, isolated tests (API setup + UI), multi-env configs, Allure reporting (with decorators), and GitHub Actions CI.
+
+──────────────────────────────────────────────────────────────────────────────
+1) Tech Stack & Principles
+──────────────────────────────────────────────────────────────────────────────
+- Use: Playwright (@playwright/test) + TypeScript (strict) + POM.
+- Reporting: Allure (with step decorators), include attachments (screenshots, traces).
+- CI: GitHub Actions, publish Playwright HTML report and Allure results as artifacts.
+- Architecture rules are non-negotiable:
+  - Top-level UI architecture: app → screens → components
+  - ONLY components can contain UI element locators and direct interactions (click/fill/expect on locators).
+  - Screens aggregate components and provide page-level composition (no direct locator calls).
+  - App wraps Playwright Page/BrowserContext concerns (navigation, refresh, new tab, wait for load states).
+  - Flows/helpers contain business logic and orchestrate app + screens + components.
+- Every test must be isolated and runnable in parallel:
+  - Start with API setup/seed (create test data, auth, feature flags, etc.)
+  - Then UI validations/manipulations.
+- Support multi-env config: dev / stage / prod.
+
+When uncertain about an API or option, do NOT guess: point to official Playwright or Allure docs and implement the safest default.
+
+──────────────────────────────────────────────────────────────────────────────
+2) Folder Structure (Required)
+──────────────────────────────────────────────────────────────────────────────
+Use this exact high-level layout:
+
+/src
+  /app
+    App.ts
+    Tabs.ts
+    Navigation.ts
+  /screens
+    (FeatureName)
+      (FeatureName)Screen.ts
+  /components
+    /common
+      BaseComponent.ts
+      Input.ts
+      Button.ts
+      Toast.ts
+    (FeatureName)
+      (FeatureName)Header.ts
+      (FeatureName)Form.ts
+  /flows
+    (FeatureName)
+      (FeatureName)Flow.ts
+  /helpers
+    apiClient.ts
+    authHelper.ts
+    dataBuilder.ts
+    env.ts
+    logger.ts
+  /config
+    playwright
+      playwright.config.base.ts
+      playwright.config.dev.ts
+      playwright.config.stage.ts
+      playwright.config.prod.ts
+    env
+      dev.env
+      stage.env
+      prod.env
+/tests
+  /api
+    setup.ts
+    clients.ts
+  /e2e
+    (feature).spec.ts
+  /fixtures
+    testFixtures.ts
+  /models
+    types.ts
+  /utils
+    selectors.ts
+    retry.ts
+/artifacts
+  (ignored in git)
+/.github/workflows
+  e2e.yml
+
+Rules:
+- components MUST be the only place where `page.locator(...)` is called.
+- screens MUST NOT call `page.locator` directly.
+- flows/helpers MUST NOT contain locators.
+- app MUST NOT contain feature-specific selectors; only generic page operations.
+
+──────────────────────────────────────────────────────────────────────────────
+3) Dependency/Access Rules (Very Strict)
+──────────────────────────────────────────────────────────────────────────────
+Allowed dependencies:
+- components → may depend on BaseComponent, models, utils
+- screens → may depend on components (+ models/utils), but NOT on flows/helpers
+- app → may depend on Playwright primitives and generic utils
+- flows/helpers → may depend on app + screens + components + api helpers
+- tests → may depend on flows/helpers + fixtures + api setup
+
+Forbidden:
+- components importing screens/flows/tests
+- screens importing flows/tests
+- app importing screens/components/flows (app is foundational)
+- any direct UI interaction outside components (no click/fill/expect on locators outside components)
+
+──────────────────────────────────────────────────────────────────────────────
+4) Responsibilities by Layer
+──────────────────────────────────────────────────────────────────────────────
+APP (src/app)
+- Encapsulate Page/Context operations:
+  - open(url), refresh(), back(), forward()
+  - waitForDomReady(), waitForNetworkIdle(), waitForURL()
+  - openNewTab(actionThatOpensTab) and return new Page
+  - handle navigation and common browser actions
+- App must have access to Screens (composition root):
+  - App exposes `screens` facade to access screen objects.
+- App does NOT contain locators or feature UI logic.
+
+SCREENS (src/screens)
+- Represent a whole page/screen (POM screen).
+- Compose multiple components.
+- Provide screen-level actions that coordinate components WITHOUT direct locator calls.
+- Example: `loginScreen.login(user)` calls `usernameInput.fill`, `passwordInput.fill`, `submitButton.click` via components.
+
+COMPONENTS (src/components)
+- The ONLY place for:
+  - locators
+  - interactions: click, fill, selectOption, hover
+  - UI assertions tied to component elements
+- Each component:
+  - accepts `page` OR `root locator` in constructor
+  - exposes explicit methods and getters for actions/assertions
+- Provide common base:
+  - BaseComponent with `protected readonly page` and `protected readonly root` pattern.
+
+FLOWS (src/flows)
+- Business scenarios (multi-step user journeys).
+- Orchestrate app + screens + components.
+- No locators; no raw page usage except via App.
+- Should be reusable across tests.
+
+HELPERS (src/helpers)
+- API setup utilities, auth, data builders, env parsing, logging.
+- All API setup must be idempotent per test; return created entities for cleanup/usage.
+- Avoid shared mutable state across tests.
+
+──────────────────────────────────────────────────────────────────────────────
+5) Allure Reporting Rules (Decorators + Steps)
+──────────────────────────────────────────────────────────────────────────────
+- Use a `@step()` decorator (custom) to wrap methods in components/screens/flows:
+  - Every meaningful action and assertion should be a step.
+- Attach artifacts on failures:
+  - screenshot, trace (Playwright trace), console logs if available.
+- Naming conventions:
+  - Step names must be human-readable and stable.
+  - Include business intent, not implementation details.
+  - Example: "Login as standard user", not "Fill username input".
+
+Implement patterns:
+- Decorators should be lightweight and not break async stack traces.
+- Prefer wrapping method body with `allure.step(name, async () => ...)` in decorator implementation.
+- Do not over-step: avoid adding steps for trivial getters.
+
+──────────────────────────────────────────────────────────────────────────────
+6) Test Design Rules (Hybrid: API setup + UI)
+──────────────────────────────────────────────────────────────────────────────
+Each test MUST follow this structure:
+
+1) API Setup (Arrange)
+- Create test user, permissions, test data via API client.
+- Authenticate via API if possible; set storage state/cookies for UI session.
+- Return a typed context object (ids, tokens, entities).
+
+2) UI Execution (Act)
+- Navigate using App.
+- Use Flows for business actions.
+- Validate outcomes using Screen/Components assertions.
+
+3) Cleanup (Optional)
+- Prefer server-side cleanup via API if environment requires it.
+- Cleanup must be best-effort and not break parallel runs.
+
+Isolation & Parallel:
+- Tests MUST be safe to run with `fullyParallel: true`.
+- Never depend on pre-existing shared accounts/data.
+- Generate unique data per test (use UUID suffix).
+- Avoid global ordering, avoid cross-test dependencies.
+
+Selectors:
+- Prefer stable selectors: data-testid, role, label.
+- Avoid brittle CSS paths.
+- Centralize selector helpers in components (or /utils/selectors.ts if needed).
+
+Waiting:
+- Never use `waitForTimeout` except as last resort with explicit comment.
+- Use Playwright expect assertions and locator auto-waiting.
+
+──────────────────────────────────────────────────────────────────────────────
+7) Multi-Environment Configuration (dev/stage/prod)
+──────────────────────────────────────────────────────────────────────────────
+- Provide env-specific config:
+  - baseURL
+  - apiBaseURL
+  - credentials placeholders (never commit secrets)
+  - feature flags
+- Switching environments:
+  - via `ENV=dev|stage|prod` (default: dev)
+  - config loader reads `config/env/*.env` and merges with process env
+- Playwright config:
+  - base config + env overlay
+  - keep deterministic defaults (timeouts, retries by CI/local)
+
+Rules:
+- No secrets in repository.
+- Document required env vars in README (but Cursor output should focus on implementation).
+
+──────────────────────────────────────────────────────────────────────────────
+8) TypeScript Standards & Patterns
+──────────────────────────────────────────────────────────────────────────────
+- TS strict mode ON.
+- Use explicit types for:
+  - API setup return objects
+  - Flow inputs/outputs
+  - Page objects constructors
+- Reuse interfaces for scalability:
+  - `IUser`, `ITestContext`, `IEnvConfig`, `IApiClient`
+- Prefer composition over inheritance except BaseComponent.
+- Keep modules small; one class per file.
+
+Naming:
+- Components: PascalCase, end with Component only if ambiguous (optional).
+- Screens: `XxxScreen`
+- Flows: `XxxFlow`
+- Helpers: `xxxHelper.ts`
+
+──────────────────────────────────────────────────────────────────────────────
+9) GitHub Actions CI Rules
+──────────────────────────────────────────────────────────────────────────────
+- CI must:
+  - install deps
+  - install Playwright browsers
+  - run tests with selected ENV (stage by default)
+  - upload artifacts:
+    - playwright-report
+    - allure-results
+    - traces (if stored)
+- Use caching for npm and Playwright browsers when appropriate.
+- Keep workflow deterministic.
+
+──────────────────────────────────────────────────────────────────────────────
+10) Output Expectations When Generating Code
+──────────────────────────────────────────────────────────────────────────────
+When asked to implement:
+- Always generate:
+  - folder structure + key files
+  - base Playwright config + env overlays
+  - Allure decorator utility
+  - BaseComponent + sample components/screen/flow
+  - API setup helper + example hybrid test
+  - GitHub Actions workflow
+- Ensure code compiles and imports are correct.
+- Prefer minimal but complete examples.
+
+──────────────────────────────────────────────────────────────────────────────
+11) Non-Negotiable Prohibitions
+──────────────────────────────────────────────────────────────────────────────
+- Do NOT place any `page.locator(...)` outside components.
+- Do NOT add shared singleton state that can break parallelization.
+- Do NOT rely on UI for test data setup if API setup can do it.
+- Do NOT use sleep-based waits without explicit justification.
+- Do NOT hardcode environment-specific URLs in tests.
+
+──────────────────────────────────────────────────────────────────────────────
+12) Quick Reference: Layer Calls
+──────────────────────────────────────────────────────────────────────────────
+tests → flows/helpers → app → screens → components
+tests → screens (allowed for simple validations) → components
+screens → components
+app → (generic Playwright ops only) and can expose screens facade
+components → Playwright locators and assertions
+flows/helpers → orchestration + API setup + business logic
+
+End of Cursor Rules.

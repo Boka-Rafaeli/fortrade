@@ -1,0 +1,28 @@
+{
+  "name": "playwright-boilerplate-1",
+  "version": "1.0.0",
+  "description": "Modern Playwright E2E framework with POM, Allure reporting, and multi-env support",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:dev": "ENV=dev playwright test",
+    "test:stage": "ENV=stage playwright test",
+    "test:prod": "ENV=prod playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "report:allure": "allure generate allure-results --clean -o allure-report && allure open allure-report",
+    "report:html": "playwright show-report"
+  },
+  "keywords": ["playwright", "e2e", "testing", "typescript", "pom"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.0.3",
+    "allure-playwright": "^2.13.0",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.6.3"
+  }
+}

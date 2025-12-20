@@ -1,0 +1,183 @@
+# Playwright E2E Boilerplate
+
+Современный TypeScript boilerplate для E2E тестирования с использованием Playwright, POM паттерна, Allure reporting и поддержкой мульти-окружений.
+
+## 🏗️ Архитектура
+
+Проект следует строгой архитектуре с разделением ответственности:
+
+```
+app → screens → components
+```
+
+- **App**: Операции с Page/BrowserContext (навигация, refresh, tabs)
+- **Screens**: Композиция компонентов, экран-уровневые действия
+- **Components**: Единственное место для locators и UI взаимодействий
+- **Flows**: Бизнес-логика, оркестрация app + screens + components
+- **Helpers**: API клиенты, утилиты, data builders
+
+## 📁 Структура проекта
+
+```
+/src
+  /app              # App класс с доступом к screens
+  /screens           # Page Object Model экраны
+  /components        # UI компоненты (единственное место для locators)
+  /flows             # Бизнес-логика и user flows
+  /helpers           # API клиенты, утилиты, декораторы
+  /config            # Конфигурации для разных окружений
+/tests
+  /api               # API setup утилиты
+  /e2e               # E2E тесты
+  /fixtures          # Playwright fixtures
+  /models            # TypeScript типы и интерфейсы
+```
+
+## 🚀 Быстрый старт
+
+### Установка зависимостей
+
+```bash
+npm install
+```
+
+### Установка браузеров Playwright
+
+```bash
+npx playwright install
+```
+
+### Запуск тестов
+
+```bash
+# Локально (dev окружение по умолчанию)
+npm test
+
+# С указанием окружения
+npm run test:dev
+npm run test:stage
+npm run test:prod
+
+# С UI режимом
+npm run test:ui
+
+# В headed режиме
+npm run test:headed
+```
+
+### Генерация отчетов
+
+```bash
+# Allure отчет
+npm run report:allure
+
+# Playwright HTML отчет
+npm run report:html
+```
+
+## 🔧 Конфигурация окружений
+
+Проект поддерживает три окружения: `dev`, `stage`, `prod`.
+
+Конфигурационные файлы находятся в:
+- `src/config/env/dev.env`
+- `src/config/env/stage.env`
+- `src/config/env/prod.env`
+
+Переменные окружения:
+- `BASE_URL` - базовый URL приложения
+- `API_BASE_URL` - базовый URL API
+
+## 📝 Написание тестов
+
+### Гибридный подход: API Setup + UI
+
+Каждый тест следует структуре:
+
+1. **API Setup** - создание тестовых данных через API
+2. **UI Execution** - навигация и взаимодействие через UI
+3. **Cleanup** - очистка тестовых данных
+
+Пример:
+
+```typescript
+test('should login successfully', async ({ app, request }) => {
+  // 1. API Setup
+  const { context, cleanup } = await setupTestUser(request);
+  
+  try {
+    // 2. UI Execution
+    const authFlow = new AuthFlow(app);
+    await authFlow.loginAndVerifyHome(context.user.email, context.user.password);
+  } finally {
+    // 3. Cleanup
+    if (cleanup) await cleanup();
+  }
+});
+```
+
+## 🎯 Правила архитектуры
+
+### Components (строго)
+- ✅ Единственное место для `page.locator(...)`
+- ✅ Все UI взаимодействия (click, fill, select)
+- ✅ UI assertions
+
+### Screens
+- ✅ Композиция компонентов
+- ✅ Экрано-уровневые действия
+- ❌ НЕТ прямых вызовов `page.locator`
+
+### App
+- ✅ Навигация, refresh, tabs
+- ✅ Доступ к screens через `app.screens`
+- ❌ НЕТ feature-specific логики
+
+### Flows
+- ✅ Бизнес-логика
+- ✅ Оркестрация app + screens + components
+- ❌ НЕТ locators
+
+## 📊 Allure Reporting
+
+Все действия автоматически оборачиваются в Allure steps через декоратор `@step()`:
+
+```typescript
+@step('Login as user')
+async login(username: string, password: string): Promise<void> {
+  // ...
+}
+```
+
+## 🔄 CI/CD
+
+GitHub Actions workflow настроен для:
+- Запуска тестов на разных окружениях
+- Публикации артефактов (Playwright report, Allure results, traces)
+- Параллельного выполнения тестов
+
+## 📚 Дополнительные ресурсы
+
+- [Playwright Documentation](https://playwright.dev)
+- [Allure Playwright](https://github.com/allure-framework/allure-js/tree/master/packages/allure-playwright)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+
+## 🤝 Разработка
+
+### Добавление нового экрана
+
+1. Создайте компоненты в `src/components/{feature}/`
+2. Создайте экран в `src/screens/{feature}/{Feature}Screen.ts`
+3. Добавьте экран в `src/app/Screens.ts`
+4. Создайте flow в `src/flows/{feature}/{Feature}Flow.ts` (если нужен)
+
+### Добавление нового теста
+
+1. Создайте файл в `tests/e2e/{feature}.spec.ts`
+2. Используйте fixtures из `tests/fixtures/testFixtures.ts`
+3. Следуйте гибридному подходу: API setup → UI → Cleanup
+
+## 📄 Лицензия
+
+ISC
+
