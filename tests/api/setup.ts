@@ -30,10 +30,9 @@ export async function setupTestUser(
   
   const context: ITestContext = {
     user: {
-      id: authContext.user.id || '',
-      email: authContext.user.email,
-      username: authContext.user.username || testUserData.username,
       ...authContext.user,
+      id: authContext.user.id || '',
+      username: authContext.user.username || testUserData.username,
     },
     authToken: authContext.token,
   };

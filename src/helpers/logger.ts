@@ -11,8 +11,11 @@ export class Logger {
     console.log(this.formatMessage('INFO', message));
   }
 
-  static warn(message: string): void {
+  static warn(message: string, error?: Error): void {
     console.warn(this.formatMessage('WARN', message));
+    if (error) {
+      console.warn(error);
+    }
   }
 
   static error(message: string, error?: Error): void {
