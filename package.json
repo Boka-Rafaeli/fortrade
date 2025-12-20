@@ -1,7 +1,7 @@
 {
-  "name": "playwright-boilerplate-1",
+  "name": "fortrade-e2e-tests",
   "version": "1.0.0",
-  "description": "Modern Playwright E2E framework with POM, Allure reporting, and multi-env support",
+  "description": "Fortrade E2E tests - Modern Playwright framework with POM, Allure reporting, and multi-env support",
   "main": "index.js",
   "scripts": {
     "test": "playwright test",

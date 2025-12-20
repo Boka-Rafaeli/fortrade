@@ -15,9 +15,15 @@ import { Logger } from '../../src/helpers/logger';
  * Each test is isolated and can run in parallel
  */
 test.describe('Authentication', () => {
-  // Setup API mocks before all tests in this suite
+  // Setup API mocks before all tests in this suite (only if USE_API_MOCKS is enabled)
   test.beforeEach(async ({ page }) => {
-    await setupApiMocks(page);
+    const useApiMocks = process.env.USE_API_MOCKS === 'true';
+    if (useApiMocks) {
+      Logger.info('Using API mocks (USE_API_MOCKS=true)');
+      await setupApiMocks(page);
+    } else {
+      Logger.info('Using real API (USE_API_MOCKS=false or not set)');
+    }
   });
 
   test('should login successfully with API-created user', async ({ app, authHelper, request }) => {
