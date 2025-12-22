@@ -1,11 +1,11 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { BaseComponent } from './BaseComponent';
+import { BaseBrowserElement } from './BaseBrowserElement';
 import { step } from '../../helpers/decorators';
 
 /**
- * Reusable Toast/Notification component
+ * Reusable Toast/Notification browser element
  */
-export class Toast extends BaseComponent {
+export class Toast extends BaseBrowserElement {
   private readonly toastLocator: Locator;
 
   constructor(page: Page, root?: Locator, selector?: string) {

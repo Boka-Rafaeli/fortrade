@@ -1,11 +1,11 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { BaseComponent } from './BaseComponent';
+import { BaseBrowserElement } from './BaseBrowserElement';
 import { step } from '../../helpers/decorators';
 
 /**
- * Reusable Input component
+ * Reusable Input browser element
  */
-export class Input extends BaseComponent {
+export class Input extends BaseBrowserElement {
   private readonly inputLocator: Locator;
 
   constructor(page: Page, root?: Locator, selector?: string) {

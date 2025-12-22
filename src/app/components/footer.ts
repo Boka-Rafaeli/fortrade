@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { Button } from "../common/Button";
+import { Button } from "../../core/browser-elements/Button";
 
 export class FooterComponent{
     private readonly menuBtn: Button;
@@ -15,3 +15,4 @@ export class FooterComponent{
         await this.menuBtn.click();
     }
 }
+

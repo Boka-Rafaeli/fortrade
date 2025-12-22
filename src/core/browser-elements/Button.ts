@@ -1,12 +1,12 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { BaseComponent } from './BaseComponent';
+import { BaseBrowserElement } from './BaseBrowserElement';
 import { step } from '../../helpers/decorators';
 
 /**
- * Reusable Button component
- * Example of a common component following the pattern
+ * Reusable Button browser element
+ * Example of a common browser element following the pattern
  */
-export class Button extends BaseComponent {
+export class Button extends BaseBrowserElement {
   private readonly buttonLocator: Locator;
 
   constructor(page: Page, root?: Locator, selector?: string) {
@@ -21,8 +21,8 @@ export class Button extends BaseComponent {
   }
 
   @step('Verify button is visible')
-  async shouldBeVisible(): Promise<void> {
-    await expect(this.buttonLocator).toBeVisible();
+  async shouldBeVisible(options?: { timeout?: number }): Promise<void> {
+    await expect(this.buttonLocator).toBeVisible(options);
   }
 
   @step('Verify button is enabled')

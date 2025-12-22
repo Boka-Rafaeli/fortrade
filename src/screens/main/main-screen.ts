@@ -1,4 +1,4 @@
-import { FooterComponent } from "../../components/app-components/footer";
+import { FooterComponent } from "../../app/components/footer";
 import { Page } from "@playwright/test";
 
 export class MainScreen{

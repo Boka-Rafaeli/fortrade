@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
-import { Input } from '../../components/common/Input';
-import { Button } from '../../components/common/Button';
+import { Input } from '../../core/browser-elements/Input';
+import { Button } from '../../core/browser-elements/Button';
 import { step } from '../../helpers/decorators';
 
 /**
