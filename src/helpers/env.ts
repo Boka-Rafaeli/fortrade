@@ -42,7 +42,7 @@ function parseEnvFile(filePath: string): Record<string, string> {
  * Priority: process.env > .env file > default
  */
 export function loadEnvConfig(env: Environment = 'stage'): IEnvConfig {
-  // Determine env from process.env or default to stage (dev is not used for fortrade)
+  // Determine env from process.env or default to stage
   const targetEnv = (process.env.ENV as Environment) || env;
 
   // Load base .env if exists

@@ -2,12 +2,12 @@ import { defineConfig } from '@playwright/test';
 import { loadEnvConfig } from './src/helpers/env';
 
 // Load environment configuration
-// Default to 'stage' since 'dev' is not used for fortrade project
+// Default to 'stage' since 'dev' is not used in this project
 const env = (process.env.ENV as 'dev' | 'stage' | 'prod') || 'stage';
 const config = loadEnvConfig(env);
 
 /**
- * Main Playwright configuration for fortrade E2E tests
+ * Main Playwright configuration for E2E tests
  * Uses environment-specific settings based on ENV variable
  * 
  * Usage:
