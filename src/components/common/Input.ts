@@ -15,6 +15,7 @@ export class Input extends BaseComponent {
 
   @step('Fill input with value')
   async fill(value: string): Promise<void> {
+    await this.inputLocator.waitFor({ state: 'visible', timeout: 10000 });
     await this.inputLocator.fill(value);
   }
 
