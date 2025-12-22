@@ -15,7 +15,7 @@ import { Logger } from '../../src/helpers/logger';
  */
 test.describe('Authentication', () => {
 
-  test('should login successfully with API-created user', async ({ app, authHelper, request }) => {
+  test('should login successfully with API-created user', async ({ app, authHelper, request, networkRecorder }) => {
     // ========== API SETUP (Arrange) ==========
     Logger.info('Starting API setup');
     const { context, cleanup } = await setupTestUser(request);
@@ -31,6 +31,17 @@ test.describe('Authentication', () => {
       // Additional UI assertions
       await expect(app.page).toHaveURL(/\/home/);
       
+      // ========== NETWORK VALIDATION ==========
+      // Example: Verify login API was called
+      networkRecorder.expectRequestCalled(/\/auth\/login/, { times: 1 });
+      
+      // Get login response
+      const loginResponse = networkRecorder.getLastResponse(/\/auth\/login/);
+      if (loginResponse) {
+        Logger.info(`Login API status: ${loginResponse.status}`);
+        expect(loginResponse.status).toBe(200);
+      }
+      
       Logger.info('Test completed successfully');
     } finally {
       // ========== CLEANUP ==========
@@ -40,7 +51,7 @@ test.describe('Authentication', () => {
     }
   });
 
-  test('should logout successfully', async ({ app, request }) => {
+  test('should logout successfully', async ({ app, request, networkRecorder }) => {
     // API Setup
     const { context, cleanup } = await setupTestUser(request);
     
@@ -54,6 +65,13 @@ test.describe('Authentication', () => {
       
       // Verify logout
       await expect(app.page).toHaveURL(/\/login/);
+      
+      // Network validation: verify logout API was called
+      const logoutResponse = networkRecorder.getLastResponse(/\/auth\/logout/);
+      if (logoutResponse) {
+        expect(logoutResponse.status).toBeGreaterThanOrEqual(200);
+        expect(logoutResponse.status).toBeLessThan(300);
+      }
     } finally {
       if (cleanup) {
         await cleanup();

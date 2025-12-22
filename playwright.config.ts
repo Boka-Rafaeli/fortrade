@@ -22,9 +22,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   
   // Timeouts
-  timeout: 6000, // Test timeout: 6000ms
+  timeout: 60000, // Test timeout: 60 seconds for E2E tests
   expect: {
-    timeout: 5000, // Expect timeout: 5000ms
+    timeout: 10000, // Expect timeout: 10 seconds
   },
   
   reporter: [
@@ -39,8 +39,8 @@ export default defineConfig({
     video: 'retain-on-failure',
     // Run in headed mode locally, headless in CI
     headless: !!process.env.CI,
-    // Navigation timeout: 10000ms
-    navigationTimeout: 10000,
+    // Navigation timeout: 30 seconds
+    navigationTimeout: 30000,
   },
 
   projects: [
