@@ -31,7 +31,7 @@ export class LoginScreen {
 
   @step('Navigate to login page')
   async navigate(): Promise<void> {
-    await this.page.goto('/login');
+    await this.page.goto('/#login');
     await this.page.waitForLoadState('networkidle');
   }
 
