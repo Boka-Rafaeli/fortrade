@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
-import { Input } from '../../components/common/Input';
-import { Button } from '../../components/common/Button';
+import { Input } from '../../core/browser-elements/Input';
+import { Button } from '../../core/browser-elements/Button';
 import { step } from '../../helpers/decorators';
 
 /**
@@ -20,15 +20,18 @@ export class LoginScreen {
 
   constructor(page: Page) {
     this.page = page;
-    // Initialize components - adjust selectors based on your app
-    this.usernameInput = new Input(page, undefined, '[data-testid="username-input"]');
-    this.passwordInput = new Input(page, undefined, '[data-testid="password-input"]');
-    this.submitButton = new Button(page, undefined, '[data-testid="login-button"]');
+    // Initialize components - using data-test-id selectors from the page
+    // Email input: using data-test-id attribute (most stable selector)
+    this.usernameInput = new Input(page, undefined, '[data-test-id="input-identifier"]');
+    // Password input: using data-test-id attribute (most stable selector)
+    this.passwordInput = new Input(page, undefined, '[data-test-id="input-password"]');
+    // Submit button: using button with "Log In" text
+    this.submitButton = new Button(page, undefined, 'button:has-text("Log In")');
   }
 
   @step('Navigate to login page')
   async navigate(): Promise<void> {
-    await this.page.goto('/login');
+    await this.page.goto('/#login');
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -37,8 +40,8 @@ export class LoginScreen {
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
-    // Wait for navigation after login
-    await this.page.waitForURL(/\/(dashboard|home)/, { timeout: 10000 });
+    // Wait for navigation after login (supports both hash routing #home and path routing /home)
+    await this.page.waitForURL(/#(home|dashboard)|\/(home|dashboard)/, { timeout: 30000 });
   }
 
   @step('Verify login screen is displayed')

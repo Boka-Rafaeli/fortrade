@@ -1,11 +1,11 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { BaseComponent } from './BaseComponent';
+import { BaseBrowserElement } from './BaseBrowserElement';
 import { step } from '../../helpers/decorators';
 
 /**
- * Reusable Text component
+ * Reusable Text browser element
  */
-export class Text extends BaseComponent {
+export class Text extends BaseBrowserElement {
   private readonly textLocator: Locator;
 
   constructor(page: Page, root?: Locator, selector?: string) {

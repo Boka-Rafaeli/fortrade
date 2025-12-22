@@ -1,12 +1,12 @@
 import { Page, Locator } from '@playwright/test';
 
 /**
- * Base component class that all UI components should extend
+ * Base browser element class that all browser elements should extend
  * Provides common functionality and enforces the pattern:
- * - Components are the ONLY place for locators
- * - Components handle all direct UI interactions
+ * - Browser elements are the ONLY place for locators
+ * - Browser elements handle all direct UI interactions
  */
-export abstract class BaseComponent {
+export abstract class BaseBrowserElement {
   protected readonly page: Page;
   protected readonly root?: Locator;
 
@@ -16,7 +16,7 @@ export abstract class BaseComponent {
   }
 
   /**
-   * Get a locator scoped to this component's root (if provided)
+   * Get a locator scoped to this element's root (if provided)
    * Otherwise returns a page-level locator
    */
   protected locator(selector: string): Locator {
@@ -57,7 +57,7 @@ export abstract class BaseComponent {
   }
 
   /**
-   * Wait for component to be visible
+   * Wait for element to be visible
    */
   protected async waitForVisible(timeout?: number): Promise<void> {
     if (this.root) {
