@@ -21,8 +21,8 @@ export class Button extends BaseComponent {
   }
 
   @step('Verify button is visible')
-  async shouldBeVisible(): Promise<void> {
-    await expect(this.buttonLocator).toBeVisible();
+  async shouldBeVisible(options?: { timeout?: number }): Promise<void> {
+    await expect(this.buttonLocator).toBeVisible(options);
   }
 
   @step('Verify button is enabled')
