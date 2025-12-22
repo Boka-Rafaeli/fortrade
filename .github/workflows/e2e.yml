@@ -45,7 +45,7 @@ jobs:
       - name: Run Playwright E2E tests
         env:
           ENV: ${{ github.event.inputs.environment || 'stage' }}
-        run: npm test
+        run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         continue-on-error: true
 
       - name: Upload Playwright report
@@ -70,5 +70,13 @@ jobs:
         with:
           name: test-traces-${{ matrix.shard }}
           path: test-results/
+          retention-days: 7
+
+      - name: Upload network logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: network-logs-${{ matrix.shard }}
+          path: test-results/**/network/
           retention-days: 7
 

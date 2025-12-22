@@ -1,5 +1,6 @@
-import { Page, expect } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { Button } from '../../components/common/Button';
+import { Text } from '../../components/common/Text';
 import { step } from '../../helpers/decorators';
 
 /**
@@ -8,10 +9,12 @@ import { step } from '../../helpers/decorators';
 export class HomeScreen {
   private readonly page: Page;
   private readonly logoutButton: Button;
+  private readonly userInfoText: Text;
 
   constructor(page: Page) {
     this.page = page;
     this.logoutButton = new Button(page, undefined, '[data-testid="logout-button"]');
+    this.userInfoText = new Text(page, undefined);
   }
 
   @step('Navigate to home page')
@@ -24,7 +27,7 @@ export class HomeScreen {
   async verifyLoggedIn(username?: string): Promise<void> {
     // Example: verify user info is displayed
     if (username) {
-      await expect(this.page.getByText(username)).toBeVisible();
+      await this.userInfoText.shouldContainText(username);
     }
     await this.logoutButton.shouldBeVisible();
   }

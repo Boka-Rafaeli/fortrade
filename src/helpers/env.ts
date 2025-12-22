@@ -38,6 +38,29 @@ function parseEnvFile(filePath: string): Record<string, string> {
 }
 
 /**
+ * Validate environment configuration
+ */
+function validateConfig(config: IEnvConfig, env: Environment): void {
+  const errors: string[] = [];
+
+  if (!config.baseURL || config.baseURL.trim() === '') {
+    errors.push(`BASE_URL is required for environment: ${env}`);
+  } else if (!config.baseURL.startsWith('http://') && !config.baseURL.startsWith('https://')) {
+    errors.push(`BASE_URL must be a valid URL (http:// or https://) for environment: ${env}`);
+  }
+
+  if (!config.apiBaseURL || config.apiBaseURL.trim() === '') {
+    errors.push(`API_BASE_URL is required for environment: ${env}`);
+  } else if (!config.apiBaseURL.startsWith('http://') && !config.apiBaseURL.startsWith('https://')) {
+    errors.push(`API_BASE_URL must be a valid URL (http:// or https://) for environment: ${env}`);
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
+  }
+}
+
+/**
  * Loads environment configuration from .env files
  * Priority: process.env > .env file > default
  */
@@ -68,6 +91,9 @@ export function loadEnvConfig(env: Environment = 'stage'): IEnvConfig {
       config[key.replace('E2E_', '').toLowerCase()] = process.env[key] || '';
     }
   });
+
+  // Validate configuration
+  validateConfig(config, targetEnv);
 
   return config;
 }

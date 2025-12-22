@@ -9,9 +9,48 @@ import { Logger } from './logger';
 export class ApiClient {
   private readonly request: APIRequestContext;
   private readonly config = getEnvConfig();
+  private authToken?: string;
 
   constructor(request: APIRequestContext) {
     this.request = request;
+  }
+
+  /**
+   * Get default headers with authentication
+   */
+  private getDefaultHeaders(customHeaders?: Record<string, string>): Record<string, string> {
+    const headers: Record<string, string> = { ...customHeaders };
+    
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+    
+    return headers;
+  }
+
+  /**
+   * Handle API response errors
+   */
+  private async handleResponse(response: APIResponse, method: string, url: string): Promise<APIResponse> {
+    if (!response.ok()) {
+      let errorBody: string = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // Ignore errors reading error body
+      }
+      
+      Logger.error(
+        `API ${method} ${url} failed with status ${response.status()}`,
+        new Error(errorBody || 'Unknown error')
+      );
+      
+      throw new Error(
+        `API ${method} ${url} failed: ${response.status()} ${response.statusText()}. ${errorBody}`
+      );
+    }
+    
+    return response;
   }
 
   /**
@@ -20,7 +59,15 @@ export class ApiClient {
   async get(endpoint: string, options?: { headers?: Record<string, string> }): Promise<APIResponse> {
     const url = `${this.config.apiBaseURL}${endpoint}`;
     Logger.debug(`GET ${url}`);
-    return await this.request.get(url, { headers: options?.headers });
+    
+    try {
+      const headers = this.getDefaultHeaders(options?.headers);
+      const response = await this.request.get(url, { headers });
+      return await this.handleResponse(response, 'GET', url);
+    } catch (error) {
+      Logger.error(`Failed to execute GET ${url}`, error as Error);
+      throw error;
+    }
   }
 
   /**
@@ -29,13 +76,21 @@ export class ApiClient {
   async post(endpoint: string, data?: any, options?: { headers?: Record<string, string> }): Promise<APIResponse> {
     const url = `${this.config.apiBaseURL}${endpoint}`;
     Logger.debug(`POST ${url}`);
-    return await this.request.post(url, {
-      data,
-      headers: {
+    
+    try {
+      const headers = this.getDefaultHeaders({
         'Content-Type': 'application/json',
         ...options?.headers,
-      },
-    });
+      });
+      const response = await this.request.post(url, {
+        data,
+        headers,
+      });
+      return await this.handleResponse(response, 'POST', url);
+    } catch (error) {
+      Logger.error(`Failed to execute POST ${url}`, error as Error);
+      throw error;
+    }
   }
 
   /**
@@ -44,13 +99,21 @@ export class ApiClient {
   async put(endpoint: string, data?: any, options?: { headers?: Record<string, string> }): Promise<APIResponse> {
     const url = `${this.config.apiBaseURL}${endpoint}`;
     Logger.debug(`PUT ${url}`);
-    return await this.request.put(url, {
-      data,
-      headers: {
+    
+    try {
+      const headers = this.getDefaultHeaders({
         'Content-Type': 'application/json',
         ...options?.headers,
-      },
-    });
+      });
+      const response = await this.request.put(url, {
+        data,
+        headers,
+      });
+      return await this.handleResponse(response, 'PUT', url);
+    } catch (error) {
+      Logger.error(`Failed to execute PUT ${url}`, error as Error);
+      throw error;
+    }
   }
 
   /**
@@ -59,15 +122,31 @@ export class ApiClient {
   async delete(endpoint: string, options?: { headers?: Record<string, string> }): Promise<APIResponse> {
     const url = `${this.config.apiBaseURL}${endpoint}`;
     Logger.debug(`DELETE ${url}`);
-    return await this.request.delete(url, { headers: options?.headers });
+    
+    try {
+      const headers = this.getDefaultHeaders(options?.headers);
+      const response = await this.request.delete(url, { headers });
+      return await this.handleResponse(response, 'DELETE', url);
+    } catch (error) {
+      Logger.error(`Failed to execute DELETE ${url}`, error as Error);
+      throw error;
+    }
   }
 
   /**
    * Set authentication token for subsequent requests
    */
   setAuthToken(token: string): void {
-    // This can be extended to store token and use in default headers
+    this.authToken = token;
     Logger.debug('Auth token set');
+  }
+
+  /**
+   * Clear authentication token
+   */
+  clearAuthToken(): void {
+    this.authToken = undefined;
+    Logger.debug('Auth token cleared');
   }
 }
 
