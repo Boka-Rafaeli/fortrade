@@ -1,10 +1,10 @@
-name: Fortrade E2E Tests
+name: E2E Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       environment:
@@ -17,7 +17,7 @@ on:
           - prod
 
 jobs:
-  fortrade-test:
+  e2e-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     
@@ -42,10 +42,9 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Fortrade Playwright tests
+      - name: Run Playwright E2E tests
         env:
           ENV: ${{ github.event.inputs.environment || 'stage' }}
-          USE_API_MOCKS: 'false'
         run: npm test
         continue-on-error: true
 
