@@ -95,6 +95,9 @@ app → screens → components
 
 ```bash
 npm install
+
+# После установки зависимостей, настройте husky (для pre-commit hooks)
+npm run prepare
 ```
 
 ### Установка браузеров Playwright
