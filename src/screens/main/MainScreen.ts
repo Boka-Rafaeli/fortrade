@@ -1,4 +1,4 @@
-import { FooterComponent } from "../../app/components/footer";
+import { FooterComponent } from "../../app/components";
 import { Page } from "@playwright/test";
 
 export class MainScreen{
@@ -8,3 +8,4 @@ export class MainScreen{
        this.footer = new FooterComponent(page);
     }
 }
+
