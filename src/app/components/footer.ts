@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { Button } from "../../core/browser-elements/Button";
+import { Button } from "../../core/browser-elements";
 
 export class FooterComponent{
     private readonly menuBtn: Button;

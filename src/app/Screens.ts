@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { LoginScreen } from '../screens/login/LoginScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
-import { MainScreen } from '@/screens/main/main-screen';
+import { MainScreen } from '@/screens/main/MainScreen';
 
 /**
  * Screens facade - composition root for all screen objects

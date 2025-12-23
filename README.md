@@ -1,4 +1,4 @@
-# Playwright E2E Boilerplate
+# temp-playwright
 
 Современный TypeScript boilerplate для E2E тестирования с использованием Playwright, POM паттерна, Allure reporting и поддержкой мульти-окружений.
 
@@ -20,18 +20,74 @@ app → screens → components
 
 ```
 /src
-  /app              # App класс с доступом к screens
-  /screens           # Page Object Model экраны
-  /components        # UI компоненты (единственное место для locators)
-  /flows             # Бизнес-логика и user flows
-  /helpers           # API клиенты, утилиты, декораторы
-  /config            # Конфигурации для разных окружений
+  /app                    # App класс с доступом к screens
+    App.ts
+    Screens.ts
+    /components           # Компоненты приложения (app-specific)
+      footer.ts
+      index.ts            # Barrel export
+  /core                   # Переиспользуемые модули (reusable across projects)
+    /browser-elements     # Browser UI элементы (Button, Input, Text, Toast)
+      BaseBrowserElement.ts
+      Button.ts
+      Input.ts
+      Text.ts
+      Toast.ts
+      index.ts            # Barrel export
+    /utils                # Переиспользуемые утилиты
+    /validators           # Переиспользуемые валидаторы
+  /screens                # Page Object Model экраны
+    /home
+      HomeScreen.ts
+    /login
+      LoginScreen.ts
+    /main
+      MainScreen.ts
+  /flows                  # Бизнес-логика и user flows
+    /auth
+      AuthFlow.ts
+  /helpers                # API клиенты, утилиты, декораторы
+    apiClient.ts
+    authHelper.ts
+    dataBuilder.ts
+    decorators.ts
+    env.ts
+    logger.ts
+    networkRecorder.ts
+  /config                 # Конфигурации для разных окружений
+    /playwright           # Playwright конфигурации
+      playwright.config.base.ts
+      playwright.config.dev.ts
+      playwright.config.stage.ts
+      playwright.config.prod.ts
+    /env                  # Переменные окружения
+      dev.env
+      stage.env
+      prod.env
+
 /tests
-  /api               # API setup утилиты
-  /e2e               # E2E тесты
-  /fixtures          # Playwright fixtures
-  /models            # TypeScript типы и интерфейсы
+  /api                    # API setup утилиты
+    setup.ts
+    clients.ts
+  /e2e                    # E2E тесты
+    *.spec.ts
+  /fixtures               # Playwright fixtures
+    testFixtures.ts
+  /models                 # TypeScript типы и интерфейсы
+    types.ts
+  /utils                  # Утилиты для тестов
+    retry.ts
+    selectors.ts
 ```
+
+## 🔧 Конфигурация Playwright
+
+Проект использует единый файл конфигурации `playwright.config.ts` в корне проекта, который:
+- Загружает переменные окружения из `src/config/env/{env}.env`
+- Использует базовую конфигурацию из `src/config/playwright/playwright.config.base.ts`
+- Поддерживает три окружения: `dev`, `stage`, `prod`
+
+Дополнительные конфигурационные файлы в `src/config/playwright/` могут быть использованы для расширения базовой конфигурации.
 
 ## 🚀 Быстрый старт
 
@@ -39,6 +95,9 @@ app → screens → components
 
 ```bash
 npm install
+
+# После установки зависимостей, настройте husky (для pre-commit hooks)
+npm run prepare
 ```
 
 ### Установка браузеров Playwright
@@ -50,7 +109,7 @@ npx playwright install
 ### Запуск тестов
 
 ```bash
-# Локально (dev окружение по умолчанию)
+# Локально (stage окружение по умолчанию)
 npm test
 
 # С указанием окружения
@@ -138,6 +197,11 @@ test('should login successfully', async ({ app, request }) => {
 - ✅ Оркестрация app + screens + components
 - ❌ НЕТ locators
 
+### Core (переиспользуемые модули)
+- ✅ `core/browser-elements` - переиспользуемые UI элементы
+- ✅ `core/utils` - переиспользуемые утилиты
+- ✅ `core/validators` - переиспользуемые валидаторы
+
 ## 📊 Allure Reporting
 
 Все действия автоматически оборачиваются в Allure steps через декоратор `@step()`:
@@ -166,8 +230,8 @@ GitHub Actions workflow настроен для:
 
 ### Добавление нового экрана
 
-1. Создайте компоненты в `src/components/{feature}/`
-2. Создайте экран в `src/screens/{feature}/{Feature}Screen.ts`
+1. Создайте компоненты в `src/app/components/` (если специфичны для приложения) или используйте `src/core/browser-elements/`
+2. Создайте экран в `src/screens/{feature}/{Feature}Screen.ts` (PascalCase)
 3. Добавьте экран в `src/app/Screens.ts`
 4. Создайте flow в `src/flows/{feature}/{Feature}Flow.ts` (если нужен)
 
@@ -177,7 +241,19 @@ GitHub Actions workflow настроен для:
 2. Используйте fixtures из `tests/fixtures/testFixtures.ts`
 3. Следуйте гибридному подходу: API setup → UI → Cleanup
 
+### Импорты
+
+Используйте barrel exports для упрощения импортов:
+
+```typescript
+// Вместо
+import { Button } from '../../core/browser-elements/Button';
+import { Input } from '../../core/browser-elements/Input';
+
+// Используйте
+import { Button, Input } from '../../core/browser-elements';
+```
+
 ## 📄 Лицензия
 
 ISC
-

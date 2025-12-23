@@ -5,9 +5,7 @@ allure-results/
 allure-report/
 playwright-report/
 test-results/
-.env
-.env.local
 *.log
 .DS_Store
-.idea
-.husky/_
+package-lock.json
+

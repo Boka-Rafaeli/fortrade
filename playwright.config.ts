@@ -18,13 +18,13 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: 1, // Retry failed tests 2 times for both CI and local
+  retries: 1, // Retry failed tests 1 time for both CI and local
   workers: process.env.CI ? 1 : undefined,
   
   // Timeouts
-  timeout: 60000, // Test timeout: 6000ms
+  timeout: 60000, // Test timeout: 60000ms
   expect: {
-    timeout: 30000, // Expect timeout: 5000ms
+    timeout: 30000, // Expect timeout: 30000ms
   },
   
   reporter: [
