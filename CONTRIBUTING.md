@@ -72,32 +72,23 @@ import { Input } from '../../core/browser-elements/Input';
 
 ### Структура теста
 
-Каждый тест должен следовать гибридному подходу:
+Каждый тест должен следовать UI-only подходу:
 
 ```typescript
-test('should perform action', async ({ app, request }) => {
-  // 1. API Setup (Arrange)
-  const { context, cleanup } = await setupTestUser(request);
+test('should perform action', async ({ app }) => {
+  // 1. UI Execution (Act)
+  const flow = new FeatureFlow(app);
+  await flow.performAction('test@example.com', 'password');
   
-  try {
-    // 2. UI Execution (Act)
-    const flow = new FeatureFlow(app);
-    await flow.performAction(context.data);
-    
-    // 3. Assertions
-    await expect(app.page).toHaveURL(/expected-url/);
-  } finally {
-    // 4. Cleanup
-    if (cleanup) await cleanup();
-  }
+  // 2. Assertions
+  await expect(app.page).toHaveURL(/expected-url/);
 });
 ```
 
 ### Правила
 
 - Каждый тест должен быть изолированным и запускаться параллельно
-- Используйте API для setup данных, не UI
-- Всегда очищайте тестовые данные после теста
+- Используйте чистый UI подход без API setup
 - Используйте декоратор `@step()` для всех действий
 - Названия тестов должны быть описательными
 

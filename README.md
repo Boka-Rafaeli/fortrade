@@ -46,27 +46,21 @@ app → screens → components
   /flows                  # Бизнес-логика и user flows
     /auth
       AuthFlow.ts
-  /helpers                # API клиенты, утилиты, декораторы
+  /helpers                # Утилиты, декораторы
     apiClient.ts
     authHelper.ts
     dataBuilder.ts
     decorators.ts
     env.ts
     logger.ts
-    networkRecorder.ts
   /config                 # Конфигурации для разных окружений
-    /playwright           # Playwright конфигурации
-      playwright.config.base.ts
-      playwright.config.dev.ts
-      playwright.config.stage.ts
-      playwright.config.prod.ts
     /env                  # Переменные окружения
       dev.env
       stage.env
       prod.env
 
 /tests
-  /api                    # API setup утилиты
+  /api                    # API утилиты (опционально)
     setup.ts
     clients.ts
   /e2e                    # E2E тесты
@@ -84,10 +78,7 @@ app → screens → components
 
 Проект использует единый файл конфигурации `playwright.config.ts` в корне проекта, который:
 - Загружает переменные окружения из `src/config/env/{env}.env`
-- Использует базовую конфигурацию из `src/config/playwright/playwright.config.base.ts`
 - Поддерживает три окружения: `dev`, `stage`, `prod`
-
-Дополнительные конфигурационные файлы в `src/config/playwright/` могут быть использованы для расширения базовой конфигурации.
 
 ## 🚀 Быстрый старт
 
@@ -149,29 +140,23 @@ npm run report:html
 
 ## 📝 Написание тестов
 
-### Гибридный подход: API Setup + UI
+### UI-only подход
 
-Каждый тест следует структуре:
+Тесты используют чистый UI подход:
 
-1. **API Setup** - создание тестовых данных через API
-2. **UI Execution** - навигация и взаимодействие через UI
-3. **Cleanup** - очистка тестовых данных
+1. **UI Execution** - навигация и взаимодействие через UI
+2. **Assertions** - проверка UI состояния и поведения
 
 Пример:
 
 ```typescript
-test('should login successfully', async ({ app, request }) => {
-  // 1. API Setup
-  const { context, cleanup } = await setupTestUser(request);
+test('should login successfully', async ({ app }) => {
+  // UI Execution
+  const authFlow = new AuthFlow(app);
+  await authFlow.loginAndVerifyHome('user@example.com', 'password');
   
-  try {
-    // 2. UI Execution
-    const authFlow = new AuthFlow(app);
-    await authFlow.loginAndVerifyHome(context.user.email, context.user.password);
-  } finally {
-    // 3. Cleanup
-    if (cleanup) await cleanup();
-  }
+  // Assertions
+  await expect(app.page).toHaveURL(/\/home/);
 });
 ```
 
@@ -239,7 +224,7 @@ GitHub Actions workflow настроен для:
 
 1. Создайте файл в `tests/e2e/{feature}.spec.ts`
 2. Используйте fixtures из `tests/fixtures/testFixtures.ts`
-3. Следуйте гибридному подходу: API setup → UI → Cleanup
+3. Следуйте UI-only подходу: UI Execution → Assertions
 
 ### Импорты
 
